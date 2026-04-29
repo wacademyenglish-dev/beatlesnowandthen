@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOLFFY: Now and Then</title>
+    <!-- Fonts: Vintage British / Typewriter / Clean -->
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Outfit:wght@400;500;600;800&family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        abbey: {
+                            wood: '#3e2723',     /* Deep Wood */
+                            woodLight: '#5d4037',/* Lighter Wood */
+                            cream: '#f4ece1',    /* Vintage Paper/Cream */
+                            navy: '#1c2841',     /* British Navy */
+                            red: '#8c2626',      /* Brick/Bus Red */
+                            gold: '#bda888',     /* Vintage Brass/Gold */
+                            tape: '#2b2b2b',     /* Magnetic Tape Black */
+                        }
+                    },
+                    fontFamily: {
+                        playfair: ['"Playfair Display"', 'serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                        typewriter: ['"Courier Prime"', 'monospace'],
+                        pt: ['"PT Serif"', 'serif'],
+                    },
+                    boxShadow: {
+                        'tape': '0 4px 10px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1)',
+                        'paper': 'inset 0 0 40px rgba(0,0,0,0.05), 0 10px 25px rgba(0,0,0,0.2)',
+                        'button': '0 4px 0 #111827, 0 5px 10px rgba(0,0,0,0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Base & Resets */
+        body {
+            background-color: #1a1a1a;
+            background-image: 
+                linear-gradient(45deg, #1f1f1f 25%, transparent 25%, transparent 75%, #1f1f1f 75%, #1f1f1f),
+                linear-gradient(45deg, #1f1f1f 25%, transparent 25%, transparent 75%, #1f1f1f 75%, #1f1f1f);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            color: #1c2841;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+        }
+
+        .allow-select { user-select: text; }
+
+        /* --- TAPE REEL ANIMATIONS --- */
+        .reel-spin { animation: spin 5s linear infinite; }
+        .reel-spin-slow { animation: spin 10s linear infinite; }
+        .reel-paused { animation-play-state: paused; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- THE STUDIO SCREEN (THE SLIDES CONTAINER) --- */
+        .analog-screen {
+            background-color: #f4ece1;
+            color: #1c2841;
+            background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.05"/></svg>');
+            position: relative;
+            flex: 1;
+            width: 100%;
+        }
+        .analog-screen::after {
+            content: ''; position: absolute; inset: 0;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.1);
+            pointer-events: none; z-index: 11;
+        }
+
+        /* --- SLIDE NAVIGATION --- */
+        .slide {
+            display: none; opacity: 0; width: 100%; min-height: 100%;
+            flex-direction: column; align-items: center; justify-content: center;
+            padding: 40px 20px;
+        }
+        .slide.active { display: flex; animation: nostalgicFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .slide::before, .slide::after { content: ''; margin: auto; }
+        .slide > * { flex-shrink: 0; max-width: 100%; z-index: 20; }
+
+        @keyframes nostalgicFade {
+            0% { opacity: 0; transform: scale(0.97) translateY(15px); filter: sepia(0.5); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: sepia(0); }
+        }
+
+        /* --- UI ELEMENTS: 60s STUDIO MODE --- */
+        .chunky-btn {
+            background: linear-gradient(to bottom, #d4cbbe, #bda888);
+            border: 2px solid #8c7b60; border-bottom: 4px solid #6b5c46;
+            color: #1c2841; font-weight: bold; transition: all 0.1s;
+        }
+        .chunky-btn:active { transform: translateY(2px); border-bottom: 2px solid #6b5c46; }
+        
+        .mcq-btn { transition: all 0.2s ease; border-left: 6px solid transparent; background-color: #fff; }
+        .mcq-btn:hover { border-color: #8c2626; transform: translateX(5px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        /* Master Tapes (Vocab) */
+        .master-tape { transition: all 0.4s; background: #2b2b2b; padding: 25px 20px; border: 2px solid #111; border-radius: 4px; cursor: pointer; position: relative; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .tape-label-sticker { background: #f4ece1; padding: 10px; border: 1px solid #ccc; transform: rotate(-2deg); font-family: 'Courier Prime', monospace; transition: all 0.3s; }
+        .master-tape:hover { transform: scale(1.05) translateY(-5px); }
+        .master-tape:hover .tape-label-sticker { border-color: #8c2626; color: #8c2626; }
+        .dust-layer { position: absolute; inset: 0; background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.4"/></svg>'), rgba(200,180,150,0.3); z-index: 5; transition: opacity 0.8s; pointer-events: none; }
+        .master-tape.cleaned .dust-layer { opacity: 0; }
+
+        /* Memory Game Cards Vintage */
+        .memory-card { height: 130px; perspective: 1000px; cursor: pointer; width: 100%; }
+        .memory-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; pointer-events: none; }
+        .memory-card.flipped .memory-card-inner { transform: rotateY(180deg); }
+        .memory-card.matched .memory-card-back { background: #8c2626 !important; color: white !important; border-color: #8c2626 !important; }
+        .memory-card-front, .memory-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; border: 2px solid #d4cbbe; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .memory-card-front { background: #e8ddcb; color: #bda888; font-family: 'Playfair Display', serif; font-size: 3rem;}
+        .memory-card-front::after { content: '§'; }
+        .memory-card-back { background: #1c2841; color: #f4ece1; transform: rotateY(180deg); font-family: 'Outfit'; border-color: #1c2841; }
+
+        /* Timeline / Setlist */
+        .timeline-item { transition: all 0.3s; cursor: pointer; border-left: 4px solid #d4cbbe; background: #fff; }
+        .timeline-item.selected { border-color: #8c2626; background: rgba(140,38,38,0.05); transform: scale(1.02); }
+
+        .lyric-highlight { color: #8c2626; font-family: 'PT Serif', serif; font-style: italic; cursor: pointer; position: relative; transition: all 0.3s; padding: 0 5px; border-bottom: 2px dotted #8c2626; font-weight: bold; }
+        .lyric-highlight:hover { background: rgba(140,38,38,0.1); border-radius: 4px; }
+
+        /* Rhyme Matcher PRO */
+        .rhyme-btn { transition: all 0.2s; background: #fff; border: 2px solid #d4cbbe; color: #1c2841; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .rhyme-btn.selected { border-color: #8c2626; background-color: rgba(140,38,38,0.05); color: #8c2626; transform: scale(1.05); }
+        .rhyme-btn.matched { background-color: #8c2626; border-color: #8c2626; color: white; pointer-events: none; opacity: 0.8; }
+
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-color: #8c2626 !important; color: #8c2626 !important; background-color: #fff0f0 !important; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(3px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+            40%, 60% { transform: translate3d(5px, 0, 0); }
+        }
+
+        .confetti { position: absolute; width: 12px; height: 12px; background-color: #bda888; border-radius: 2px; opacity: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); pointer-events: none;}
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        
+        .no-scroll::-webkit-scrollbar { display: none; }
+        .no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* The Mixing Console (Splicer) */
+        .fader-track { width: 40px; height: 120px; background: #111; border-radius: 20px; position: relative; box-shadow: inset 0 5px 10px rgba(0,0,0,0.8); border: 2px solid #333; margin: 0 auto; cursor: pointer; transition: all 0.3s;}
+        .fader-knob { width: 50px; height: 30px; background: linear-gradient(to bottom, #d4cbbe, #8c7b60); border-radius: 4px; position: absolute; bottom: 5px; left: -7px; box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset 0 2px 2px rgba(255,255,255,0.5); border: 1px solid #444; transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); display: flex; align-items: center; justify-content: center; }
+        .fader-knob::after { content: ''; width: 80%; height: 2px; background: #fff; opacity: 0.5; }
+        .fader-track.used .fader-knob { bottom: 85px; background: linear-gradient(to bottom, #e8ddcb, #bda888); }
+        .fader-track.used { opacity: 0.5; pointer-events: none; }
+        .fader-word { font-family: 'Courier Prime', monospace; font-weight: bold; margin-top: 15px; color: #f4ece1; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem;}
+        .fader-target { display: inline-block; min-width: 60px; height: 30px; border-bottom: 3px solid #bda888; margin: 0 5px; text-align: center; color: #bda888; font-family: 'Courier Prime', monospace; font-weight: bold; }
+        
+        /* The B-Sides (Odd One Out) */
+        .b-side-record { transition: all 0.3s; cursor: pointer; position: relative; border-radius: 50%; box-shadow: 0 10px 20px rgba(0,0,0,0.3); border: 4px solid #111;}
+        .b-side-record:hover { transform: translateY(-10px) scale(1.05); z-index: 30; box-shadow: 0 15px 30px rgba(0,0,0,0.4); border-color: #8c2626;}
+        .discarded { animation: rollAway 0.8s forwards; pointer-events: none; }
+        @keyframes rollAway { 
+            0% { transform: translateX(0) rotate(0); opacity: 1; } 
+            100% { transform: translateX(400px) rotate(360deg); opacity: 0; } 
+        }
+
+        /* Tape Reel Component for Footer */
+        .tape-reel { width: 100%; height: 100%; border-radius: 50%; background: #222; border: 3px solid #bda888; position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;}
+        .tape-reel::before { content: ''; position: absolute; inset: 15%; border-radius: 50%; border: 2px dashed #bda888; opacity: 0.5; }
+        .tape-hub { width: 30%; height: 30%; background: #d4cbbe; border-radius: 50%; border: 2px solid #8c7b60; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
+        .tape-hub::after { content: ''; width: 30%; height: 30%; background: #111; border-radius: 50%; }
+        .reel-spoke { position: absolute; width: 100%; height: 4px; background: #bda888; z-index: 1;}
+        .reel-spoke:nth-child(2) { transform: rotate(60deg); }
+        .reel-spoke:nth-child(3) { transform: rotate(120deg); }
+
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen bg-[#1a1a1a] overflow-hidden">
+
+    <!-- ================= PERFECT FLEX LAYOUT WRAPPER ================= -->
+    <div class="flex-1 flex flex-col w-full h-full max-w-[1600px] mx-auto p-2 lg:p-4 gap-2 z-10">
+        
+        <!-- MAIN PANEL (Slides Area) -->
+        <main class="flex-1 flex flex-col bg-abbey-woodLight rounded-3xl border-[6px] border-abbey-wood shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
+            
+            <!-- THE ANALOG SCREEN -->
+            <div class="flex-1 m-2 lg:m-4 rounded-2xl analog-screen shadow-paper p-6 lg:p-10 overflow-y-auto no-scroll flex flex-col" id="slides-container">
+                
+                <!-- WATERMARK -->
+                <div class="absolute bottom-6 right-8 z-0 text-abbey-navy/5 font-black font-playfair text-6xl md:text-8xl tracking-widest pointer-events-none uppercase transform -rotate-2 italic">
+                    WOLFFY
+                </div>
+
+                <!-- SLIDE 01: LINER NOTES -->
+                <section class="slide active">
+                    <div class="flex justify-between items-start mb-8 w-full max-w-5xl mx-auto z-20">
+                        <div>
+                            <h2 class="font-typewriter text-abbey-red font-bold tracking-widest uppercase text-sm mb-4 bg-abbey-red/10 inline-block px-3 py-1 rounded">Master Tape • Mono</h2>
+                            <h1 class="text-6xl lg:text-9xl font-black font-playfair leading-none text-abbey-navy tracking-tight mb-2 italic">Now And<br><span class="text-abbey-gold">Then</span></h1>
+                        </div>
+                        <div class="w-24 h-24 border-[6px] border-abbey-navy rounded-full flex flex-col items-center justify-center font-playfair text-xl font-black text-abbey-cream bg-abbey-navy shadow-lg transform rotate-6">
+                            <span>THE</span><span class="text-2xl mt-[-5px]">BEATLES</span>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t-2 border-b-2 border-abbey-gold/30 py-8 my-6 w-full max-w-5xl mx-auto z-20 bg-abbey-cream/50 rounded-xl">
+                        <div class="px-8 space-y-4">
+                            <p class="font-outfit text-xl md:text-2xl text-abbey-navy font-bold"><span class="text-abbey-red font-typewriter">> TARGET:</span> B1 (Intermediate)</p>
+                            <p class="font-outfit text-xl md:text-2xl text-abbey-navy font-bold"><span class="text-abbey-red font-typewriter">> GRAMMAR:</span> Used to vs. Present Simple</p>
+                            <p class="font-outfit text-xl md:text-2xl text-abbey-navy font-bold"><span class="text-abbey-red font-typewriter">> VIBE:</span> 1960s Abbey Road Nostalgia</p>
+                        </div>
+                    </div>
+
+                    <div class="w-full max-w-5xl mx-auto text-center mt-2 z-20">
+                        <p class="font-outfit text-lg md:text-xl text-abbey-navy/80 font-medium">Use the tape deck console below. <strong class="text-abbey-navy">Double-click</strong> any English word to open the Smart Dict.</p>
+                    </div>
+                </section>
+
+                <!-- SLIDE 02: COVER ART -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20 text-center">Track 01 • The Final Record</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 text-center tracking-wide italic">Now and Then</h1>
+                    <div class="w-full max-w-lg rounded-sm overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.3)] border-[8px] border-white bg-white flex items-center justify-center z-20 mx-auto relative group">
+                        <img src="https://upload.wikimedia.org/wikipedia/pt/thumb/2/2b/The_Beatles_-_2023_-_Now_and_Then.jpg/250px-The_Beatles_-_2023_-_Now_and_Then.jpg" alt="Now and Then Cover" class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'400\'><rect width=\'100%\' height=\'100%\' fill=\'%231c2841\'/><text x=\'50%\' y=\'50%\' font-family=\'serif\' font-size=\'40\' fill=\'%23f4ece1\' text-anchor=\'middle\'>The Beatles</text></svg>'">
+                    </div>
+                </section>
+
+                <!-- SLIDE 03: VIBE CHECK -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 02 • Warm Up</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Vibe Check</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/90 mb-8 font-medium text-center z-20">What brings you the most comfort on a <strong class="text-abbey-red font-bold text-3xl">rainy day</strong>?</p>
+                    
+                    <div class="space-y-4 w-full max-w-4xl mx-auto options-group z-20" data-correct="any">
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-red mcq-btn shadow-sm" onclick="selectMCQ(this, 'correct', 'hub-track2')">☕ Talking and catching up with old friends.</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-red mcq-btn shadow-sm" onclick="selectMCQ(this, 'correct', 'hub-track2')">📚 Being alone with my thoughts and a good book.</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-red mcq-btn shadow-sm" onclick="selectMCQ(this, 'correct', 'hub-track2')">🚀 Making exciting plans for the future.</button>
+                    </div>
+                    <div class="hidden mt-6 p-6 border-l-4 border-abbey-red bg-abbey-red/5 rounded-r-xl w-full max-w-4xl mx-auto z-20" id="hub-track2">
+                        <p class="text-abbey-red font-typewriter text-sm mb-2 uppercase tracking-widest font-bold">Speaking Starter</p>
+                        <p class="text-abbey-navy text-2xl font-playfair italic">"On rainy days, I usually..."</p>
+                    </div>
+                </section>
+
+                <!-- SLIDE 04: TRIVIA 1 -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 03 • Trivia</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">The Final Song</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/90 mb-8 font-medium text-center z-20">What is the significance of the song "Now and Then"?</p>
+                    
+                    <div class="space-y-4 w-full max-w-4xl mx-auto options-group z-20">
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-gold mcq-btn shadow-sm" onclick="selectMCQ(this, 'wrong')">A) It was the first song they ever wrote in 1960.</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-gold mcq-btn shadow-sm" onclick="selectMCQ(this, 'correct', 'hub-track3')">B) It is officially known as "the last Beatles song".</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-gold mcq-btn shadow-sm" onclick="selectMCQ(this, 'wrong')">C) It's a Paul McCartney solo track.</button>
+                    </div>
+                    <div class="hidden mt-6 p-6 border-l-4 border-abbey-gold bg-abbey-gold/10 rounded-r-xl w-full max-w-4xl mx-auto z-20" id="hub-track3">
+                        <p class="text-abbey-navy font-outfit font-bold text-xl">> CORRECT! Released in 2023, it reunites all four members one last time.</p>
+                    </div>
+                </section>
+
+                <!-- SLIDE 05: TRIVIA 2 -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 04 • Trivia</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 text-center italic">The Technology</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/90 mb-8 font-medium text-center z-20 max-w-4xl">The song started as a rough cassette demo by John Lennon in the 1970s. How did they recover his voice to sound clear in 2023?</p>
+                    
+                    <div class="space-y-4 w-full max-w-4xl mx-auto options-group z-20">
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-gold mcq-btn shadow-sm" onclick="selectMCQ(this, 'wrong')">A) Another singer imitated his voice perfectly.</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-gold mcq-btn shadow-sm" onclick="selectMCQ(this, 'wrong')">B) They used magic and hope.</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-gold mcq-btn shadow-sm" onclick="selectMCQ(this, 'correct', 'hub-track4')">C) They used Machine Learning (AI) to separate his voice from the piano.</button>
+                    </div>
+                    <div class="hidden mt-6 p-6 border-l-4 border-abbey-gold bg-abbey-gold/10 rounded-r-xl w-full max-w-4xl mx-auto z-20" id="hub-track4">
+                        <p class="text-abbey-navy font-outfit font-bold text-xl">> CORRECT! Technology directed by Peter Jackson isolated John's crystal-clear vocal.</p>
+                    </div>
+                </section>
+
+                <!-- SLIDE 06: VOCAB MASTER TAPES -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 05 • Vocabulary</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 text-center italic">The Master Tapes</h1>
+                    <p class="text-xl font-outfit text-abbey-navy/60 mb-8 z-20 text-center">Click the dusty tape boxes to clean them and reveal the words.</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-5xl mx-auto z-20">
+                        <div class="master-tape" onclick="cleanTape(this, 'Miss', 'To feel sad because someone is not with you.', 'Who do you miss the most right now?')">
+                            <div class="dust-layer"></div>
+                            <div class="tape-label-sticker w-full text-center">
+                                <span class="text-2xl font-bold word-label opacity-30">?????</span>
+                            </div>
+                            <div class="mt-4 flex justify-center"><div class="w-16 h-16 rounded-full bg-[#111] border-4 border-gray-600"></div></div>
+                        </div>
+                        <div class="master-tape" onclick="cleanTape(this, 'Survive', 'To continue to live or exist after a difficult situation.', 'What helped you survive the pandemic?')">
+                            <div class="dust-layer"></div>
+                            <div class="tape-label-sticker w-full text-center">
+                                <span class="text-2xl font-bold word-label opacity-30">?????</span>
+                            </div>
+                            <div class="mt-4 flex justify-center"><div class="w-16 h-16 rounded-full bg-[#111] border-4 border-gray-600"></div></div>
+                        </div>
+                        <div class="master-tape" onclick="cleanTape(this, 'True', 'Real, correct, not false.', 'Is it true that you like waking up early?')">
+                            <div class="dust-layer"></div>
+                            <div class="tape-label-sticker w-full text-center">
+                                <span class="text-2xl font-bold word-label opacity-30">?????</span>
+                            </div>
+                            <div class="mt-4 flex justify-center"><div class="w-16 h-16 rounded-full bg-[#111] border-4 border-gray-600"></div></div>
+                        </div>
+                        <div class="master-tape" onclick="cleanTape(this, 'Now & Then', 'Sometimes, but not regularly.', 'What do you do now and then to relax?')">
+                            <div class="dust-layer"></div>
+                            <div class="tape-label-sticker w-full text-center">
+                                <span class="text-xl font-bold word-label opacity-30">?????</span>
+                            </div>
+                            <div class="mt-4 flex justify-center"><div class="w-16 h-16 rounded-full bg-[#111] border-4 border-gray-600"></div></div>
+                        </div>
+                    </div>
+
+                    <div id="vocab-hub" class="hidden mt-10 p-8 border border-abbey-gold/30 bg-white rounded-xl w-full max-w-4xl mx-auto text-left shadow-md z-20">
+                        <h3 id="v-title" class="text-4xl font-black font-playfair text-abbey-red mb-2 italic">Word</h3>
+                        <p id="v-def" class="text-abbey-navy/80 text-xl mb-6 font-outfit">Definition</p>
+                        <p class="text-abbey-navy text-2xl font-bold font-pt">> <span id="v-q" class="text-abbey-navy italic">Question</span></p>
+                    </div>
+                </section>
+
+                <!-- SLIDE 07: PRE-LISTENING -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 06 • Discussion</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Missing You</h1>
+                    <div class="bg-white p-12 rounded-2xl border border-abbey-gold/20 text-center shadow-sm relative w-full max-w-4xl mx-auto z-20">
+                        <p class="text-3xl font-bold leading-relaxed text-abbey-navy mb-8 font-outfit">The phrase <strong class="text-abbey-red font-playfair italic">"Now and then I miss you"</strong> means the sadness is not there all the time, but it always comes back.</p>
+                        <p class="text-2xl text-abbey-navy/70 font-pt">Do you think time heals everything, or do we just get used to missing people?</p>
+                    </div>
+                </section>
+
+                <!-- SLIDE 08: THE BROADCAST (VIDEO) -->
+                <section class="slide h-full">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 07 • Playing</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-6 z-20 italic">The Music Video</h1>
+                    <div class="w-full max-w-5xl mx-auto rounded-xl overflow-hidden border-8 border-white bg-black shadow-paper relative aspect-video z-20">
+                        <iframe class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/Opxhh9Oh3rg?rel=0" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                    <div class="mt-6 p-6 border-l-4 border-abbey-navy bg-abbey-navy/5 font-outfit text-abbey-navy w-full max-w-5xl mx-auto z-20 rounded-r-xl">
+                        <p class="font-bold text-xl text-abbey-navy mb-2">> FOCUS:</p>
+                        <p class="text-lg">Watch the video. How does it make you feel seeing the young and older versions of the band together?</p>
+                    </div>
+                </section>
+
+                <!-- SLIDE 09: FIRST IMPRESSIONS -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 08 • Review</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Impressions</h1>
+                    <div class="bg-white p-12 rounded-2xl border border-abbey-gold/20 text-center shadow-sm w-full max-w-4xl mx-auto z-20">
+                        <p class="text-3xl font-bold leading-relaxed text-abbey-navy mb-8">The song sounds like a beautiful goodbye letter.</p>
+                        <p class="text-2xl text-abbey-navy/70 font-pt">If you could write a letter to a friend from your past, what would you say?</p>
+                    </div>
+                </section>
+
+                <!-- SLIDE 10: LISTENING CHECK -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 09 • Quiz</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Listening Check</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy mb-10 font-bold text-center z-20">In the chorus, what does he say he wants the person to do?</p>
+                    
+                    <div class="space-y-4 w-full max-w-4xl mx-auto options-group z-20">
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-red mcq-btn" onclick="selectMCQ(this, 'wrong')">A) He wants them to come back home.</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-red mcq-btn" onclick="selectMCQ(this, 'wrong')">B) He wants them to forget the past.</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-xl font-outfit text-abbey-navy font-medium hover:border-abbey-red mcq-btn" onclick="selectMCQ(this, 'correct', 'hub-listen')">C) He wants them to return to him ("return to me").</button>
+                    </div>
+                    <div class="hidden mt-8 p-6 border-l-4 border-abbey-red bg-abbey-red/5 font-outfit font-bold text-abbey-navy w-full max-w-4xl mx-auto text-center text-2xl z-20 rounded-r-xl" id="hub-listen">
+                        > "Now and then I want you to be there for me, always to return to me."
+                    </div>
+                </section>
+
+                <!-- SLIDE 11: THE LYRICS VIEW (VERSE) -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 10 • Reading</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">The Lyrics View</h1>
+                    <p class="text-xl font-outfit text-abbey-navy/60 mb-8 z-20">Click on the <span class="text-abbey-red font-bold">red words</span> to open Interactive Insights!</p>
+                    
+                    <div class="w-full max-w-4xl mx-auto flex-1 bg-white/60 border border-abbey-gold/20 rounded-2xl p-10 lg:p-14 overflow-y-auto text-center shadow-sm z-20">
+                        <div class="space-y-6 text-2xl md:text-3xl lg:text-4xl font-pt text-abbey-navy/90 leading-relaxed font-bold">
+                            <p>I know it's <span class="lyric-highlight" onclick="openLyricInsight('true')">true</span></p>
+                            <p>It's all <span class="lyric-highlight" onclick="openLyricInsight('because')">because of you</span></p>
+                            <p>And if I <span class="lyric-highlight" onclick="openLyricInsight('make-it')">make it through</span></p>
+                            <p>It's all because of you</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 12: THE LYRICS CHORUS -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 11 • Reading</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">The Chorus</h1>
+                    <div class="w-full max-w-4xl mx-auto flex-1 bg-white/60 border border-abbey-gold/20 rounded-2xl p-10 lg:p-14 overflow-y-auto flex items-center justify-center shadow-sm z-20">
+                        <div class="space-y-8 text-3xl md:text-4xl lg:text-5xl font-playfair font-black text-abbey-navy text-center w-full leading-tight italic">
+                            <p>Now and then</p>
+                            <p>I <span class="lyric-highlight" onclick="openLyricInsight('miss-you')">miss you</span></p>
+                            <p>Oh, now and then</p>
+                            <p>I want you to be there for me</p>
+                            <p>Always to <span class="lyric-highlight" onclick="openLyricInsight('return')">return to me</span></p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 13: GRAMMAR INTRO -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 12 • Grammar</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-6 z-20 italic">Used To</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/80 mb-10 leading-relaxed text-center max-w-4xl mx-auto z-20">
+                        We use <strong class="text-abbey-red font-bold text-3xl">USED TO</strong> to talk about habits or facts in the <strong class="text-abbey-navy">past</strong> that are <strong class="underline">not true anymore</strong>.
+                    </p>
+                    
+                    <div class="flex flex-col md:flex-row gap-6 w-full max-w-5xl mx-auto z-20">
+                        <div class="bg-white border-t-8 border-abbey-gold p-8 rounded-xl flex-1 shadow-sm text-center">
+                            <h3 class="font-typewriter text-abbey-gold text-xl font-bold mb-4">THEN (Past)</h3>
+                            <p class="font-playfair italic text-3xl text-abbey-navy">"I <strong class="text-abbey-red">used to play</strong> the guitar every day."</p>
+                            <p class="text-sm mt-4 text-gray-500 font-outfit">It was a habit.</p>
+                        </div>
+                        <div class="bg-white border-t-8 border-abbey-navy p-8 rounded-xl flex-1 shadow-sm text-center">
+                            <h3 class="font-typewriter text-abbey-navy text-xl font-bold mb-4">NOW (Present)</h3>
+                            <p class="font-playfair italic text-3xl text-abbey-navy">"I <strong class="text-abbey-navy">play</strong> the piano now."</p>
+                            <p class="text-sm mt-4 text-gray-500 font-outfit">The past habit is finished. This is the new reality.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 14: GRAMMAR STRUCTURE -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 13 • Structure</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-6 z-20 italic">Forming Habits</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/80 mb-10 leading-relaxed text-center max-w-4xl mx-auto z-20">
+                        After "used to", always use the base form of the verb.
+                    </p>
+                    
+                    <div class="bg-white p-10 rounded-2xl shadow-sm border border-abbey-gold/30 w-full max-w-4xl mx-auto z-20">
+                        <div class="flex flex-col gap-6 font-outfit text-2xl lg:text-3xl text-abbey-navy font-bold">
+                            <div class="flex items-center gap-4 border-b border-gray-200 pb-4">
+                                <span class="w-12 text-center text-green-600">➕</span>
+                                <span>I <span class="text-abbey-red">used to</span> sing.</span>
+                            </div>
+                            <div class="flex items-center gap-4 border-b border-gray-200 pb-4">
+                                <span class="w-12 text-center text-red-600">➖</span>
+                                <span>I <span class="text-abbey-red">didn't use to</span> sing.</span>
+                                <span class="text-sm text-gray-400 font-normal ml-auto">*(Notice: no 'd' in use)*</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="w-12 text-center text-blue-600">❓</span>
+                                <span><span class="text-abbey-red">Did</span> you <span class="text-abbey-red">use to</span> sing?</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 15: REEL TO REEL TUNER -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 14 • The Tape Deck</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-6 text-center z-20 italic">Time Shift</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/80 mb-10 leading-relaxed text-center z-20">
+                        Slide the knob to travel between the past and the present.
+                    </p>
+                    
+                    <div class="bg-[#2b2b2b] p-10 rounded-xl shadow-[0_15px_30px_rgba(0,0,0,0.5)] border-4 border-[#111] w-full max-w-4xl mx-auto z-20 relative flex flex-col md:flex-row items-center gap-8">
+                        
+                        <!-- Tape Deck Screen -->
+                        <div class="bg-[#f4ece1] border-4 border-abbey-wood rounded-lg p-8 w-full md:w-2/3 h-48 flex items-center justify-center relative overflow-hidden shadow-inner">
+                            <div id="deck-past" class="absolute transition-all duration-300 opacity-100 translate-y-0 text-center w-full px-4">
+                                <p class="font-pt italic text-3xl font-bold text-abbey-red mb-2">We used to be together.</p>
+                                <p class="text-abbey-navy/50 font-outfit text-lg">In the 1960s.</p>
+                            </div>
+                            <div id="deck-pres" class="absolute transition-all duration-300 opacity-0 translate-y-8 text-center w-full px-4 pointer-events-none">
+                                <p class="font-pt italic text-3xl font-bold text-abbey-navy mb-2">We are apart now.</p>
+                                <p class="text-abbey-navy/50 font-outfit text-lg">Present Day.</p>
+                            </div>
+                        </div>
+
+                        <!-- Fader Switch -->
+                        <div class="flex flex-col items-center shrink-0 bg-[#1a1a1a] p-6 rounded-lg border border-[#333]">
+                            <span class="text-white/50 font-typewriter text-xs mb-4">MODE</span>
+                            <div class="w-12 h-32 bg-black rounded-full p-1 relative shadow-inner cursor-pointer border border-[#333]" onclick="slideTapeDeck()">
+                                <div id="deck-knob" class="w-10 h-10 bg-gradient-to-b from-gray-300 to-gray-500 rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.8)] absolute top-1 left-1 transition-all duration-300 flex items-center justify-center">
+                                    <div class="w-6 h-6 rounded-full bg-[#111]"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between w-full mt-4 text-white/50 font-bold text-xs font-outfit px-2">
+                                <span>THEN</span><span>NOW</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 16: DRILL 1 -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 15 • Grammar Drill</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 text-center z-20 italic">Past Habits</h1>
+                    <div class="text-3xl md:text-4xl font-bold mb-10 bg-white p-10 rounded-2xl text-center text-abbey-navy border border-abbey-gold/30 w-full max-w-4xl mx-auto z-20 shadow-sm">
+                        "I <span class="text-abbey-red underline">_______</span> live in London, but now I live in NY."
+                    </div>
+                    <div class="grid grid-cols-2 gap-6 w-full max-w-4xl mx-auto options-group z-20">
+                        <button class="bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-2xl font-bold text-abbey-navy hover:border-abbey-red mcq-btn shadow-sm" onclick="selectMCQ(this, 'wrong')">am used to</button>
+                        <button class="bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-2xl font-bold text-abbey-navy hover:border-abbey-red mcq-btn shadow-sm" onclick="selectMCQ(this, 'correct', 'hub-dr1')">used to</button>
+                    </div>
+                    <div class="hidden mt-8 p-6 border-l-4 border-emerald-600 bg-emerald-50 font-outfit text-emerald-800 font-bold w-full max-w-4xl mx-auto text-center text-xl z-20 rounded-r-xl" id="hub-dr1">
+                        > Correct! "Used to + verb" shows a past state that changed.
+                    </div>
+                </section>
+
+                <!-- SLIDE 17: DRILL 2 -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 16 • Grammar Drill</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 text-center z-20 italic">Negative Form</h1>
+                    <div class="text-3xl md:text-4xl font-bold mb-10 bg-white p-10 rounded-2xl text-center text-abbey-navy border border-abbey-gold/30 w-full max-w-4xl mx-auto z-20 shadow-sm">
+                        "She <span class="text-abbey-red underline">_______</span> like tea, but now she loves it."
+                    </div>
+                    <div class="space-y-4 w-full max-w-4xl mx-auto options-group z-20">
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-2xl font-outfit text-abbey-navy font-bold hover:border-abbey-red mcq-btn shadow-sm" onclick="selectMCQ(this, 'wrong')">A) didn't used to</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-2xl font-outfit text-abbey-navy font-bold hover:border-abbey-red mcq-btn shadow-sm" onclick="selectMCQ(this, 'correct', 'hub-dr2')">B) didn't use to</button>
+                        <button class="w-full text-left bg-white border-2 border-abbey-gold/30 p-6 rounded-xl text-2xl font-outfit text-abbey-navy font-bold hover:border-abbey-red mcq-btn shadow-sm" onclick="selectMCQ(this, 'wrong')">C) not used to</button>
+                    </div>
+                    <div id="hub-dr2" class="hidden mt-8 p-6 border-l-4 border-emerald-600 bg-emerald-50 font-outfit font-bold text-emerald-800 text-xl text-center w-full max-w-4xl mx-auto rounded-r-xl z-20">
+                        > Correct! Because of "didn't", we remove the 'd' from 'use'.
+                    </div>
+                </section>
+
+                <!-- SLIDE 18: MIXING CONSOLE (SPLICER) -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 17 • Minigame</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-6 z-20 italic">The Mixing Console</h1>
+                    <p class="text-xl font-outfit text-abbey-navy/80 mb-10 text-center z-20">Push the faders up in the correct order to build the sentence.</p>
+                    
+                    <div class="bg-[#2b2b2b] p-8 rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] border-4 border-[#111] text-center w-full max-w-5xl z-20 relative">
+                        <div class="text-2xl lg:text-4xl font-bold mb-12 text-white font-typewriter flex flex-wrap justify-center items-center gap-2">
+                            " <span class="fader-target" id="f-blank1">1</span> 
+                              <span class="fader-target" id="f-blank2">2</span> 
+                              <span class="fader-target" id="f-blank3">3</span> 
+                              I 
+                              <span class="fader-target" id="f-blank4">4</span> 
+                              <span class="fader-target" id="f-blank5">5</span> "
+                        </div>
+                        
+                        <div class="flex gap-4 lg:gap-8 justify-center flex-wrap" id="fader-bank">
+                            <div class="flex flex-col items-center">
+                                <div class="fader-track" onclick="pushFader(this, 'miss')"><div class="fader-knob"></div></div>
+                                <span class="fader-word">miss</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="fader-track" onclick="pushFader(this, 'now')"><div class="fader-knob"></div></div>
+                                <span class="fader-word">now</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="fader-track" onclick="pushFader(this, 'you')"><div class="fader-knob"></div></div>
+                                <span class="fader-word">you</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="fader-track" onclick="pushFader(this, 'then')"><div class="fader-knob"></div></div>
+                                <span class="fader-word">then</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="fader-track" onclick="pushFader(this, 'and')"><div class="fader-knob"></div></div>
+                                <span class="fader-word">and</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="mixer-hub" class="hidden mt-8 p-4 bg-emerald-500/10 font-outfit font-bold text-emerald-600 text-2xl border-l-4 border-emerald-500 rounded-r-xl z-20">> PERFECT MIX!</div>
+                </section>
+
+                <!-- SLIDE 19: SPEAKING 1 (Nostalgia Cards) -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 18 • Speaking</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Nostalgia</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/80 mb-8 text-center z-20">Tap the cards to reveal the conversation topics.</p>
+
+                    <div class="space-y-6 w-full max-w-4xl mx-auto z-20">
+                        <div class="bg-white border-2 border-abbey-gold/20 p-8 rounded-xl shadow-sm cursor-pointer hover:border-abbey-red transition-colors" onclick="toggleSpk(this)">
+                            <p class="font-bold text-2xl text-abbey-navy">> What is a food you <span class="text-abbey-red">didn't use to</span> like as a child, but you love now?</p>
+                            <div class="spk-follow hidden mt-6 pt-6 border-t border-gray-100">
+                                <p class="text-abbey-navy/60 font-pt italic text-xl">"I didn't use to like broccoli, but now..."</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white border-2 border-abbey-gold/20 p-8 rounded-xl shadow-sm cursor-pointer hover:border-abbey-red transition-colors" onclick="toggleSpk(this)">
+                            <p class="font-bold text-2xl text-abbey-navy">> What is a game or hobby you <span class="text-abbey-red">used to</span> play all the time?</p>
+                            <div class="spk-follow hidden mt-6 pt-6 border-t border-gray-100">
+                                <p class="text-abbey-navy/60 font-pt italic text-xl">"When I was 10, I used to play..."</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 20: MEMORY MATCH -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 19 • Minigame</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 text-center z-20 italic">Memory Match</h1>
+                    <p class="text-xl font-outfit text-abbey-navy/80 mb-8 text-center z-20">Match the Present verb with its Past form.</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-5xl mx-auto z-20" id="mem-grid">
+                        <!-- JS injected -->
+                    </div>
+                    <div id="mem-hub" class="hidden mt-8 p-6 bg-abbey-red/10 border-l-4 border-abbey-red text-abbey-red font-bold w-full max-w-5xl mx-auto text-center text-2xl rounded-r-xl z-20">> Brilliant!</div>
+                </section>
+
+                <!-- SLIDE 21: TIMELINE -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 20 • Minigame</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Chronology</h1>
+                    <p class="text-xl font-outfit text-abbey-navy/80 mb-8 text-center z-20">Put the lyrics in the correct order.</p>
+                    <div class="flex flex-col gap-4 w-full max-w-4xl mx-auto z-20" id="time-container">
+                        <div class="timeline-item p-6 rounded-xl border border-gray-200 font-bold flex items-center justify-between text-xl lg:text-2xl shadow-sm text-abbey-navy" data-order="2" onclick="selTime(this)">
+                            <span class="font-pt italic">"It's all because of you"</span><span class="timeline-number font-typewriter text-abbey-red"></span>
+                        </div>
+                        <div class="timeline-item p-6 rounded-xl border border-gray-200 font-bold flex items-center justify-between text-xl lg:text-2xl shadow-sm text-abbey-navy" data-order="1" onclick="selTime(this)">
+                            <span class="font-pt italic">"I know it's true"</span><span class="timeline-number font-typewriter text-abbey-red"></span>
+                        </div>
+                        <div class="timeline-item p-6 rounded-xl border border-gray-200 font-bold flex items-center justify-between text-xl lg:text-2xl shadow-sm text-abbey-navy" data-order="3" onclick="selTime(this)">
+                            <span class="font-pt italic">"And if I make it through"</span><span class="timeline-number font-typewriter text-abbey-red"></span>
+                        </div>
+                    </div>
+                    <button onclick="resetTime()" class="mt-8 px-6 py-2 rounded-full border border-gray-300 font-bold text-gray-500 hover:text-abbey-navy hover:bg-gray-100 transition-colors z-20 text-sm uppercase tracking-widest">Reset</button>
+                    <div id="time-hub" class="hidden mt-6 p-4 bg-emerald-500/10 border-l-4 border-emerald-500 font-outfit text-emerald-700 font-bold w-full max-w-4xl mx-auto text-center text-xl z-20 rounded-r-xl">> Spot on!</div>
+                </section>
+
+                <!-- SLIDE 22: THE B-SIDES (ODD ONE OUT) -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 21 • Minigame</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">The B-Sides</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/80 mb-10 text-center z-20">Which sentence is grammatically <strong class="text-abbey-red">WRONG</strong>? Click the record to throw it away.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto z-20 relative">
+                        <div class="b-side-record bg-[#111] p-2 flex items-center justify-center aspect-square max-w-[250px] mx-auto" onclick="tossBSide(this, false)">
+                            <div class="w-full h-full rounded-full border border-[#333] flex items-center justify-center relative bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+                                <div class="w-[45%] h-[45%] bg-[#e63946] rounded-full flex items-center justify-center p-2 text-center text-white font-outfit text-[10px] sm:text-xs font-bold shadow-inner">
+                                    I used to play tennis.
+                                </div>
+                                <div class="w-2 h-2 bg-black rounded-full absolute"></div>
+                            </div>
+                        </div>
+
+                        <div class="b-side-record bg-[#111] p-2 flex items-center justify-center aspect-square max-w-[250px] mx-auto" onclick="tossBSide(this, true)">
+                            <div class="w-full h-full rounded-full border border-[#333] flex items-center justify-center relative bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+                                <div class="w-[45%] h-[45%] bg-[#e63946] rounded-full flex items-center justify-center p-2 text-center text-white font-outfit text-[10px] sm:text-xs font-bold shadow-inner">
+                                    He didn't used to smoke.
+                                </div>
+                                <div class="w-2 h-2 bg-black rounded-full absolute"></div>
+                            </div>
+                        </div>
+
+                        <div class="b-side-record bg-[#111] p-2 flex items-center justify-center aspect-square max-w-[250px] mx-auto" onclick="tossBSide(this, false)">
+                            <div class="w-full h-full rounded-full border border-[#333] flex items-center justify-center relative bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+                                <div class="w-[45%] h-[45%] bg-[#e63946] rounded-full flex items-center justify-center p-2 text-center text-white font-outfit text-[10px] sm:text-xs font-bold shadow-inner">
+                                    She used to be my friend.
+                                </div>
+                                <div class="w-2 h-2 bg-black rounded-full absolute"></div>
+                            </div>
+                        </div>
+
+                        <div class="b-side-record bg-[#111] p-2 flex items-center justify-center aspect-square max-w-[250px] mx-auto" onclick="tossBSide(this, false)">
+                            <div class="w-full h-full rounded-full border border-[#333] flex items-center justify-center relative bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+                                <div class="w-[45%] h-[45%] bg-[#e63946] rounded-full flex items-center justify-center p-2 text-center text-white font-outfit text-[10px] sm:text-xs font-bold shadow-inner">
+                                    Did you use to study?
+                                </div>
+                                <div class="w-2 h-2 bg-black rounded-full absolute"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 23: BAMBOOZLE -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 22 • Rapid Fire</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Bamboozle</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/80 mb-8 text-center z-20">Answer 2 consecutive True or False questions.</p>
+                    
+                    <div id="rq1" class="bg-white border border-gray-200 p-12 rounded-2xl text-center w-full max-w-4xl shadow-sm z-20">
+                        <p class="font-bold text-3xl mb-12 text-abbey-navy font-playfair italic">"Used to" can be used to talk about things happening right now.</p>
+                        <div class="flex gap-6 justify-center">
+                            <button onclick="rqCheck(1, false)" class="w-40 bg-abbey-navy text-white py-4 rounded-xl font-bold text-2xl hover:bg-abbey-red transition-colors">True</button>
+                            <button onclick="rqCheck(1, true)" class="w-40 bg-abbey-navy text-white py-4 rounded-xl font-bold text-2xl hover:bg-abbey-red transition-colors">False</button>
+                        </div>
+                    </div>
+                    <div id="rq2" class="hidden bg-white border border-gray-200 p-12 rounded-2xl text-center w-full max-w-4xl shadow-sm z-20">
+                        <p class="font-bold text-3xl mb-12 text-abbey-navy font-playfair italic">"Now and then" means the same as "From time to time".</p>
+                        <div class="flex gap-6 justify-center">
+                            <button onclick="rqCheck(2, true)" class="w-40 bg-abbey-navy text-white py-4 rounded-xl font-bold text-2xl hover:bg-abbey-red transition-colors">True</button>
+                            <button onclick="rqCheck(2, false)" class="w-40 bg-abbey-navy text-white py-4 rounded-xl font-bold text-2xl hover:bg-abbey-red transition-colors">False</button>
+                        </div>
+                    </div>
+                    <div id="rq-hub" class="hidden mt-8 font-typewriter font-bold text-3xl text-abbey-red z-20">> EXCELLENT RECALL!</div>
+                </section>
+
+                <!-- SLIDE 24: RHYME MATCHER -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 23 • Minigame</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Rhyme Matcher</h1>
+                    <p class="text-2xl font-outfit text-abbey-navy/80 mb-10 text-center z-20">Match the exact rhymes from the song.</p>
+                    <div class="flex gap-8 justify-center w-full max-w-4xl z-20">
+                        <div class="flex flex-col gap-4 w-1/2">
+                            <button class="rhyme-btn p-5 rounded-xl font-bold text-2xl" data-id="1" data-side="a" onclick="selectRhyme(this)">True</button>
+                            <button class="rhyme-btn p-5 rounded-xl font-bold text-2xl" data-id="2" data-side="a" onclick="selectRhyme(this)">Then</button>
+                            <button class="rhyme-btn p-5 rounded-xl font-bold text-2xl" data-id="3" data-side="a" onclick="selectRhyme(this)">Cry</button>
+                        </div>
+                        <div class="flex flex-col gap-4 w-1/2">
+                            <button class="rhyme-btn p-5 rounded-xl font-bold text-2xl" data-id="3" data-side="b" onclick="selectRhyme(this)">Try</button>
+                            <button class="rhyme-btn p-5 rounded-xl font-bold text-2xl" data-id="1" data-side="b" onclick="selectRhyme(this)">You</button>
+                            <button class="rhyme-btn p-5 rounded-xl font-bold text-2xl" data-id="2" data-side="b" onclick="selectRhyme(this)">When</button>
+                        </div>
+                    </div>
+                    <div id="rhyme-hub" class="hidden mt-10 p-6 bg-emerald-500/10 border-l-4 border-emerald-500 font-bold text-emerald-700 text-2xl text-center z-20 rounded-r-xl">> Beautiful harmonies!</div>
+                </section>
+
+                <!-- SLIDE 25: MISSING LYRICS -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 24 • Minigame</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Missing Vocals</h1>
+                    <div class="text-3xl font-bold bg-white border border-gray-200 p-12 rounded-2xl leading-loose text-center text-abbey-navy w-full max-w-4xl mx-auto z-20 shadow-sm font-pt italic">
+                        "Now and then I <span id="blank-1" class="border-b-4 border-gray-400 px-6 text-gray-400">1</span> you<br>
+                        Oh, now and then I want you to be <span id="blank-2" class="border-b-4 border-gray-400 px-6 text-gray-400">2</span> for me<br>
+                        Always to <span id="blank-3" class="border-b-4 border-gray-400 px-6 text-gray-400">3</span> to me"
+                    </div>
+                    <div class="flex gap-6 mt-10 justify-center z-20">
+                        <button class="missing-btn bg-abbey-navy text-white px-8 py-3 rounded-lg hover:bg-abbey-red transition-colors font-bold text-xl" onclick="fillMissingWord(this, 'miss')">miss</button>
+                        <button class="missing-btn bg-abbey-navy text-white px-8 py-3 rounded-lg hover:bg-abbey-red transition-colors font-bold text-xl" onclick="fillMissingWord(this, 'there')">there</button>
+                        <button class="missing-btn bg-abbey-navy text-white px-8 py-3 rounded-lg hover:bg-abbey-red transition-colors font-bold text-xl" onclick="fillMissingWord(this, 'return')">return</button>
+                    </div>
+                    <button onclick="resetMissing()" class="mt-8 text-sm font-bold text-gray-500 hover:text-abbey-navy uppercase tracking-widest z-20 transition-all">Reset</button>
+                    <div id="missing-hub" class="hidden mt-8 font-typewriter font-bold text-emerald-600 text-2xl z-20">> Vocals restored!</div>
+                </section>
+
+                <!-- SLIDE 26: ROLEPLAY -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 25 • Roleplay</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-10 z-20 italic">The Reunion</h1>
+                    <div class="bg-white border border-gray-200 p-12 rounded-2xl text-center max-w-4xl w-full z-20 shadow-sm relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 opacity-10 text-9xl">☕</div>
+                        <h3 class="text-4xl font-black mb-6 text-abbey-red font-playfair">Two Old Friends</h3>
+                        <p class="mb-6 text-2xl font-medium text-abbey-navy/80">Student & Teacher: You bump into each other in a London cafe after 20 years.</p>
+                        <div class="font-bold text-abbey-navy text-xl bg-abbey-cream p-6 rounded-lg inline-block text-left mx-auto">
+                            <p class="mb-2">1. Talk about the past: <span class="text-abbey-red">"Do you remember when we used to...?"</span></p>
+                            <p>2. Talk about now: <span class="text-abbey-red">"Nowadays, I..."</span></p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 27: SPEAKING 2 -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 26 • Speaking</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-8 z-20 italic">Now and Then</h1>
+                    <div class="space-y-6 w-full max-w-4xl mx-auto z-20">
+                        <div class="bg-white border-2 border-abbey-gold/20 p-8 rounded-xl shadow-sm cursor-pointer hover:border-abbey-red transition-colors" onclick="toggleSpk(this)">
+                            <p class="font-bold text-2xl text-abbey-navy">> Is there a friend from your past that you think about <span class="text-abbey-red italic">"now and then"</span>?</p>
+                            <div class="spk-follow hidden mt-6 pt-6 border-t border-gray-100">
+                                <p class="text-abbey-navy/60 font-pt italic text-xl">"Yes, my friend... We used to..."</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white border-2 border-abbey-gold/20 p-8 rounded-xl shadow-sm cursor-pointer hover:border-abbey-red transition-colors" onclick="toggleSpk(this)">
+                            <p class="font-bold text-2xl text-abbey-navy">> If you had to <span class="text-abbey-red italic">"start again"</span> in a new city or career today, what would you choose?</p>
+                            <div class="spk-follow hidden mt-6 pt-6 border-t border-gray-100">
+                                <p class="text-abbey-navy/60 font-pt italic text-xl">"If I had to start again, I would..."</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 28: SONG REVIEW -->
+                <section class="slide">
+                    <h2 class="font-typewriter font-bold text-abbey-red tracking-widest uppercase text-lg mb-4 z-20">Track 27 • Review</h2>
+                    <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-10 z-20 italic">Track Rating</h1>
+                    <p class="mb-12 text-center text-2xl font-medium z-20">How many apples for this final masterpiece?</p>
+                    <div class="flex justify-center gap-6 mb-12 z-20">
+                        <button onclick="rate(1)" class="star text-7xl grayscale opacity-30 hover:scale-110 transition-transform">🍏</button>
+                        <button onclick="rate(2)" class="star text-7xl grayscale opacity-30 hover:scale-110 transition-transform">🍏</button>
+                        <button onclick="rate(3)" class="star text-7xl grayscale opacity-30 hover:scale-110 transition-transform">🍏</button>
+                        <button onclick="rate(4)" class="star text-7xl grayscale opacity-30 hover:scale-110 transition-transform">🍏</button>
+                        <button onclick="rate(5)" class="star text-7xl grayscale opacity-30 hover:scale-110 transition-transform">🍏</button>
+                    </div>
+                    <div id="rat-hub" class="hidden p-6 bg-green-100 border border-green-300 text-green-800 font-bold text-2xl text-center rounded-xl z-20">You gave it <span id="star-c" class="font-black text-3xl mx-2"></span> apples!</div>
+                </section>
+
+                <!-- SLIDE 29: FINAL -->
+                <section class="slide">
+                    <div class="text-center z-20 flex flex-col items-center">
+                        <div class="w-48 h-48 lg:w-64 lg:h-64 bg-abbey-navy rounded-full flex items-center justify-center border-[8px] border-white mb-10 shadow-lg transform -rotate-3">
+                            <span class="text-white font-black font-playfair text-4xl lg:text-5xl italic">THE<br>END</span>
+                        </div>
+                        <h1 class="text-5xl lg:text-7xl font-black font-playfair text-abbey-navy mb-4 italic">And in the end...</h1>
+                        <p class="text-2xl font-medium text-abbey-navy/60 mb-12 font-outfit">The love you take is equal to the love you make.</p>
+                        <button onclick="goToSlide(0)" class="bg-abbey-red text-white font-outfit font-bold text-2xl px-12 py-4 rounded-lg hover:bg-abbey-navy transition-colors shadow-md">REWIND TAPE</button>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- 60s TAPE DECK CONTROLS -->
+            <div class="h-24 lg:h-28 bg-[#d4cbbe] border-t-4 border-[#8c7b60] flex items-center justify-between px-6 lg:px-12 shrink-0 relative z-40 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+                
+                <!-- Reel Animation -->
+                <div class="flex items-center gap-6 w-1/3">
+                    <div class="relative w-16 h-16 shrink-0">
+                        <div id="reel1" class="tape-reel reel-spin-slow">
+                            <div class="tape-hub"></div>
+                            <div class="reel-spoke"></div><div class="reel-spoke"></div><div class="reel-spoke"></div>
+                        </div>
+                    </div>
+                    <div class="hidden lg:flex flex-col bg-[#e8ddcb] border border-[#bda888] rounded p-2 w-48 shadow-inner">
+                        <span id="lcd-trk" class="text-abbey-navy font-typewriter text-[11px] font-bold tracking-widest">TAPE 01</span>
+                        <div class="w-full bg-[#bda888] h-1.5 mt-1.5 rounded-full overflow-hidden"><div id="lcd-prog" class="h-full bg-abbey-red w-0 transition-all duration-300"></div></div>
+                    </div>
+                </div>
+
+                <!-- Transport Controls -->
+                <div class="flex flex-col items-center justify-center w-1/3">
+                    <div class="flex items-center gap-4 lg:gap-8 bg-[#bda888] p-2 rounded-lg border-2 border-[#8c7b60] shadow-inner">
+                        <button onclick="prevSlide()" class="chunky-btn w-12 h-10 rounded flex items-center justify-center shadow-md">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                        </button>
+                        <button onclick="togglePlayPause()" class="chunky-btn w-16 h-12 rounded border-2 border-abbey-red flex items-center justify-center shadow-md">
+                            <svg id="i-play" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" class="hidden"><path d="M8 5v14l11-7z"/></svg>
+                            <svg id="i-pause" width="24" height="24" fill="#8c2626" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <button onclick="nextSlide()" class="chunky-btn w-12 h-10 rounded flex items-center justify-center shadow-md">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tools -->
+                <div class="flex items-center justify-end gap-3 w-1/3">
+                    <button onclick="toggleWhiteboard()" class="chunky-btn p-3 rounded shadow-md group" title="Studio Notes">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="group-active:scale-90 transition-transform"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    </button>
+                    <button onclick="toggleFS()" class="chunky-btn p-3 rounded hidden md:flex shadow-md group" title="Full Screen">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" class="group-active:scale-90 transition-transform"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- SMART DICT OVERLAY (Right Sidebar) -->
+    <aside id="dictPanel" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-[#f4ece1] border-l-8 border-abbey-navy z-[110] transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+        <div class="p-6 border-b-2 border-gray-300 flex justify-between items-center bg-white">
+            <h2 class="text-2xl font-black font-playfair text-abbey-navy italic flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                DICTIONARY
+            </h2>
+            <button onclick="document.getElementById('dictPanel').classList.add('translate-x-full')" class="text-gray-400 hover:text-abbey-red font-bold text-xl">✕</button>
+        </div>
+        <div class="p-6 flex-1 overflow-y-auto no-scroll" id="dict-content">
+            <div class="flex flex-col items-center justify-center h-full text-center opacity-50 text-abbey-navy">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-4"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+                <p class="font-outfit text-xl">Double-click any english word to translate.</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- INSIGHT OVERLAY -->
+    <div id="insight-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-abbey-navy/90 opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div class="bg-[#f4ece1] border-4 border-abbey-gold rounded-2xl p-10 lg:p-14 max-w-3xl w-full shadow-2xl relative">
+            <button onclick="closeLyricInsight()" class="absolute top-6 right-6 text-gray-500 hover:text-white bg-white border border-gray-300 w-10 h-10 rounded-full hover:bg-abbey-red transition-all font-bold flex items-center justify-center">✕</button>
+            <h2 id="ins-title" class="text-4xl lg:text-5xl font-black text-abbey-navy mb-6 font-playfair italic">Insight</h2>
+            <p id="ins-explanation" class="text-xl lg:text-2xl text-abbey-navy/80 border-l-4 border-abbey-red pl-6 mb-10 leading-relaxed font-pt">...</p>
+            <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-inner">
+                <p id="ins-q" class="text-abbey-red font-bold mb-8 text-2xl font-outfit">Question?</p>
+                <div id="ins-opts" class="flex flex-col gap-4"></div>
+                <div id="ins-fb" class="hidden mt-8 text-emerald-600 font-bold text-3xl text-center font-typewriter">> PERFECT</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WHITEBOARD (LOUSA) -->
+    <aside id="wbPanel" class="fixed top-0 left-0 h-full w-full md:w-[450px] bg-[#f4ece1] border-r-8 border-abbey-navy z-[100] transform -translate-x-full transition-transform duration-500 flex flex-col shadow-2xl">
+        <div class="p-8 border-b-2 border-gray-200 flex justify-between items-center bg-white relative">
+            <h2 class="text-3xl font-black font-playfair text-abbey-navy italic">STUDIO NOTES</h2>
+            <button onclick="toggleWhiteboard()" class="w-12 h-12 bg-abbey-red text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-sm">
+                <span class="text-2xl font-black">✕</span>
+            </button>
+        </div>
+        
+        <div class="p-6 border-b border-gray-200 bg-white">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-4 font-typewriter">> Feedback</span>
+            <div class="flex gap-4">
+                <button onclick="triggerPraise('LOVELY! 🍏', 'Beautiful grammar.')" class="px-4 py-2 border-2 border-emerald-600 text-emerald-700 rounded font-bold text-sm hover:bg-emerald-600 hover:text-white transition-all">LOVELY!</button>
+                <button onclick="triggerPraise('BRILLIANT! ✨', 'Spot on!')" class="px-4 py-2 border-2 border-abbey-navy text-abbey-navy rounded font-bold text-sm hover:bg-abbey-navy hover:text-white transition-all">BRILLIANT!</button>
+            </div>
+        </div>
+
+        <textarea id="wbText" class="flex-1 bg-transparent p-8 outline-none resize-none text-abbey-navy font-pt text-2xl leading-[2.5rem] placeholder:text-gray-400" placeholder="Type vocabulary or translations here..."></textarea>
+    </aside>
+
+    <!-- PRAISE OVERLAY POPUP -->
+    <div id="praise-overlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div id="praise-card" class="bg-[#f4ece1] border-[8px] border-abbey-gold rounded-2xl p-16 max-w-3xl w-full shadow-2xl relative transform scale-50 transition-transform duration-500 flex flex-col items-center justify-center text-center">
+            <h2 id="praise-main" class="text-6xl lg:text-8xl font-black text-abbey-navy mb-4 font-playfair italic">LOVELY!</h2>
+            <p id="praise-sub" class="text-2xl text-abbey-red font-bold font-typewriter uppercase tracking-widest">Spot on!</p>
+        </div>
+    </div>
+
+    <!-- JS LOGIC -->
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length; 
+        let isPlaying = true;
+
+        function init() { updateUI(); setupMem(); }
+
+        function nextSlide() { if(currentSlide < totalSlides-1) { slides[currentSlide].classList.remove('active'); currentSlide++; slides[currentSlide].classList.add('active'); updateUI(); if(currentSlide === totalSlides-1) shootConfetti(); } }
+        function prevSlide() { if(currentSlide > 0) { slides[currentSlide].classList.remove('active'); currentSlide--; slides[currentSlide].classList.add('active'); updateUI(); } }
+        function goToSlide(i) { slides[currentSlide].classList.remove('active'); currentSlide = i; slides[currentSlide].classList.add('active'); updateUI(); }
+
+        function updateUI() {
+            const trkLabel = document.getElementById('lcd-trk');
+            if(trkLabel) trkLabel.innerText = `TAPE ${(currentSlide+1).toString().padStart(2,'0')}`;
+            
+            const prog = document.getElementById('lcd-prog');
+            if(prog && totalSlides > 1) prog.style.width = `${(currentSlide/(totalSlides-1))*100}%`;
+            
+            const container = document.getElementById('slides-container');
+            if(container) container.scrollTop = 0;
+        }
+
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            document.getElementById('i-play').classList.toggle('hidden', isPlaying);
+            document.getElementById('i-pause').classList.toggle('hidden', !isPlaying);
+            const r1 = document.getElementById('reel1');
+            if(r1) r1.classList.toggle('reel-paused', !isPlaying);
+        }
+
+        function toggleFS() { 
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const reqFS = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            const exitFS = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+            if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
+                if(reqFS) { const p = reqFS.call(docEl); if(p) p.catch(()=>{}); }
+            } else { if(exitFS) exitFS.call(doc); }
+        }
+        
+        function toggleWhiteboard() { document.getElementById('wbPanel').classList.toggle('-translate-x-full'); }
+
+        // Dict
+        document.addEventListener('dblclick', async (e) => {
+            if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            const sel = window.getSelection().toString().trim();
+            if(sel && /^[A-Za-z]+$/.test(sel)) {
+                const dp = document.getElementById('dictPanel');
+                dp.classList.remove('translate-x-full');
+                const content = document.getElementById('dict-content');
+                content.innerHTML = `<p class="text-center text-gray-500 mt-10 font-typewriter">Searching archives...</p>`;
+                try {
+                    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${sel.toLowerCase()}`);
+                    const data = await res.json();
+                    if(data.title) { content.innerHTML = `<p class="text-center text-abbey-red mt-10">Not found in archives.</p>`; return; }
+                    const entry = data[0];
+                    const def = entry.meanings[0].definitions[0].definition;
+                    content.innerHTML = `<h3 class="text-3xl font-black text-abbey-navy capitalize font-playfair italic">${entry.word}</h3><p class="mt-4 text-abbey-navy/80 text-xl font-pt">${def}</p>`;
+                } catch(e) { content.innerHTML = `<p class="text-red-500 mt-10">Error.</p>`; }
+            }
+        });
+
+        // Praise
+        function triggerPraise(main, sub) {
+            document.getElementById('wbPanel').classList.add('-translate-x-full');
+            const overlay = document.getElementById('praise-overlay');
+            const card = document.getElementById('praise-card');
+            document.getElementById('praise-main').innerText = main;
+            document.getElementById('praise-sub').innerText = sub;
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => card.classList.replace('scale-50', 'scale-100'), 50);
+            shootConfetti();
+            setTimeout(() => {
+                card.classList.replace('scale-100', 'scale-50');
+                overlay.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500); 
+        }
+
+        // Reel Tuner
+        function slideTapeDeck() {
+            const knob = document.getElementById('deck-knob');
+            const past = document.getElementById('deck-past');
+            const pres = document.getElementById('deck-pres');
+            
+            if(knob.classList.contains('translate-y-20')) {
+                // To Past
+                knob.classList.remove('translate-y-20');
+                past.classList.replace('opacity-0','opacity-100'); past.classList.replace('translate-y-8','translate-y-0'); past.classList.remove('pointer-events-none');
+                pres.classList.replace('opacity-100','opacity-0'); pres.classList.replace('translate-y-0','translate-y-8'); pres.classList.add('pointer-events-none');
+            } else {
+                // To Pres
+                knob.classList.add('translate-y-20');
+                past.classList.replace('opacity-100','opacity-0'); past.classList.replace('translate-y-0','translate-y-8'); past.classList.add('pointer-events-none');
+                pres.classList.replace('opacity-0','opacity-100'); pres.classList.replace('translate-y-8','translate-y-0'); pres.classList.remove('pointer-events-none');
+            }
+        }
+
+        // Memory
+        function setupMem() {
+            const grid = document.getElementById('mem-grid');
+            if(!grid) return;
+            const data = [{id:1,v:'Play'},{id:1,v:'Played'},{id:2,v:'Go'},{id:2,v:'Went'},{id:3,v:'See'},{id:3,v:'Saw'},{id:4,v:'Are'},{id:4,v:'Were'}].sort(()=>0.5-Math.random());
+            grid.innerHTML = '';
+            data.forEach(d => {
+                const c = document.createElement('div');
+                c.className='memory-card'; c.dataset.id=d.id;
+                c.innerHTML=`<div class="memory-card-inner"><div class="memory-card-front"></div><div class="memory-card-back">${d.v}</div></div>`;
+                c.onclick=()=>flip(c);
+                grid.appendChild(c);
+            });
+        }
+        let f1, f2, lock=false;
+        function flip(c) {
+            if(lock || c.classList.contains('flipped')) return;
+            c.classList.add('flipped');
+            if(!f1) { f1=c; return; } f2=c; lock=true;
+            if(f1.dataset.id===f2.dataset.id) { f1.classList.add('matched'); f2.classList.add('matched'); f1=f2=null; lock=false; shootConfetti(); }
+            else { setTimeout(()=>{f1.classList.remove('flipped'); f2.classList.remove('flipped'); f1=f2=null; lock=false;}, 800); }
+        }
+
+        // Mixing Console (Faders)
+        let activeFader = 1;
+        const expectedFaders = { 1: "now", 2: "and", 3: "then", 4: "miss", 5: "you" };
+        function pushFader(fretEl, word) {
+            if(activeFader > 5) return;
+            if(expectedFaders[activeFader] === word) {
+                const b = document.getElementById(`f-blank${activeFader}`);
+                if(b) { b.innerText = word.toUpperCase(); b.classList.add('text-abbey-navy', 'border-abbey-navy'); }
+                fretEl.classList.add('used'); activeFader++;
+                if(activeFader > 5) { document.getElementById('mixer-hub').classList.remove('hidden'); shootConfetti(); }
+            } else { fretEl.classList.add('shake'); setTimeout(()=>fretEl.classList.remove('shake'),400); }
+        }
+
+        // Rhyme
+        let selA = null, selB = null, rhymeMatches = 0;
+        function selectRhyme(btn) {
+            if(btn.classList.contains('matched')) return;
+            const side = btn.dataset.side;
+            if(side === 'a') { if(selA) selA.classList.remove('selected'); selA = btn; }
+            else { if(selB) selB.classList.remove('selected'); selB = btn; }
+            btn.classList.add('selected');
+            
+            if(selA && selB) {
+                if(selA.dataset.id === selB.dataset.id) {
+                    selA.classList.replace('selected', 'matched'); selB.classList.replace('selected', 'matched');
+                    selA = selB = null; rhymeMatches++;
+                    if(rhymeMatches === 3) { document.getElementById('rhyme-hub').classList.remove('hidden'); shootConfetti(); }
+                } else {
+                    selA.classList.add('shake'); selB.classList.add('shake');
+                    setTimeout(() => { selA.classList.remove('shake', 'selected'); selB.classList.remove('shake', 'selected'); selA = selB = null; }, 400);
+                }
+            }
+        }
+
+        // Missing
+        let curBlank = 1; 
+        const expMiss = {1:'miss', 2:'there', 3:'return'};
+        function fillMissingWord(btn, word) {
+            if(curBlank>3) return;
+            if(word === expMiss[curBlank]) {
+                const b = document.getElementById(`blank-${curBlank}`);
+                if(b) { b.innerText = word.toUpperCase(); b.classList.replace('text-gray-400', 'text-abbey-navy'); b.classList.replace('border-gray-400', 'border-abbey-navy'); }
+                btn.classList.add('opacity-50', 'pointer-events-none');
+                curBlank++;
+                if(curBlank>3) { document.getElementById('missing-hub').classList.remove('hidden'); shootConfetti(); }
+            } else { btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'), 400); }
+        }
+        function resetMissing() {
+            curBlank=1; 
+            document.querySelectorAll('[id^="blank-"]').forEach((b,i)=>{ b.innerText=i+1; b.classList.replace('text-abbey-navy','text-gray-400'); b.classList.replace('border-abbey-navy','border-gray-400'); });
+            document.querySelectorAll('.missing-btn').forEach(b=> b.classList.remove('opacity-50', 'pointer-events-none'));
+            document.getElementById('missing-hub').classList.add('hidden');
+        }
+
+        // Misc
+        function selectMCQ(btn, type, hubId) {
+            const group = btn.closest('.options-group');
+            group.querySelectorAll('.mcq-btn').forEach(b => { b.classList.remove('border-abbey-red', 'bg-abbey-red/5'); b.classList.add('bg-white'); });
+            if(type === 'correct' || type === 'any') { btn.classList.add('border-abbey-red', 'bg-abbey-red/5'); if(hubId) document.getElementById(hubId).classList.remove('hidden'); shootConfetti(); }
+            else { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 400); }
+        }
+
+        function cleanTape(el, t, def, q) {
+            el.classList.add('cleaned');
+            el.querySelector('.word-label').innerText = t;
+            el.querySelector('.word-label').classList.replace('opacity-30', 'opacity-100');
+            
+            document.getElementById('vocab-hub').classList.remove('hidden');
+            document.getElementById('v-title').innerText = t;
+            document.getElementById('v-def').innerText = def;
+            document.getElementById('v-q').innerText = q;
+        }
+
+        function toggleSpk(el) { el.querySelector('.spk-follow').classList.toggle('hidden'); }
+
+        let curT = 0;
+        function selTime(b) {
+            if(b.classList.contains('selected')) return;
+            if(parseInt(b.dataset.order) === curT+1) {
+                curT++; b.classList.add('selected'); b.querySelector('.timeline-number').innerText=curT;
+                if(curT===3) { document.getElementById('time-hub').classList.remove('hidden'); shootConfetti(); }
+            } else { b.classList.add('shake'); setTimeout(()=>b.classList.remove('shake'),400); }
+        }
+        function resetTime() { curT=0; document.querySelectorAll('.timeline-item').forEach(i=>{i.classList.remove('selected'); i.querySelector('.timeline-number').innerText='';}); document.getElementById('time-hub').classList.add('hidden');}
+
+        function tossBSide(el, isWrong) {
+            if(isWrong) {
+                el.classList.add('discarded');
+                shootConfetti();
+            } else {
+                el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'),400);
+            }
+        }
+
+        function rqCheck(n, c) {
+            if(c) { document.getElementById('rq'+n).classList.add('hidden'); if(n===1) document.getElementById('rq2').classList.remove('hidden'); else { document.getElementById('rq-hub').classList.remove('hidden'); shootConfetti(); } }
+            else { document.getElementById('rq'+n).classList.add('shake'); setTimeout(()=>document.getElementById('rq'+n).classList.remove('shake'),400); }
+        }
+
+        function rate(n) { document.querySelectorAll('.star').forEach((s,i)=>{ s.classList.toggle('grayscale', i>=n); s.classList.toggle('opacity-30', i>=n); }); document.getElementById('rat-hub').classList.remove('hidden'); document.getElementById('star-c').innerText=n; }
+
+        function openLyricInsight(k) {
+            const data = {
+                'true': {t:'True', e:'Something that is real and correct.', q:'Do you believe in true love?', o:['Yes, I do.', 'No, I don\'t.']},
+                'because': {t:'Because of you', e:'The reason something happens.', q:'Who is someone that makes you happy?', o:['My family.', 'My best friend.']},
+                'make-it': {t:'Make it through', e:'To survive a difficult situation.', q:'How do you make it through a bad day?', o:['Listening to music.', 'Sleeping.']},
+                'miss-you': {t:'Miss you', e:'To feel sad when someone is not there.', q:'Who do you miss today?', o:['An old friend.', 'A family member.']},
+                'return': {t:'Return to me', e:'To come back.', q:'If you could return to a place, where would it be?', o:['My childhood home.', 'A place I visited.']}
+            }[k];
+            if(!data) return;
+            document.getElementById('ins-title').innerText=data.t; document.getElementById('ins-explanation').innerText=data.e; document.getElementById('ins-q').innerText=data.q;
+            const con = document.getElementById('ins-opts'); con.innerHTML='';
+            data.o.forEach(o => { const b=document.createElement('button'); b.className='bg-white p-4 rounded-xl text-left font-bold text-xl text-abbey-navy border border-gray-200 hover:border-abbey-red transition-colors'; b.innerText=o; b.onclick=()=>document.getElementById('ins-fb').classList.remove('hidden'); con.appendChild(b); });
+            document.getElementById('ins-fb').classList.add('hidden');
+            document.getElementById('insight-overlay').classList.replace('opacity-0','opacity-100'); document.getElementById('insight-overlay').classList.replace('pointer-events-none','pointer-events-auto');
+        }
+        function closeLyricInsight() { document.getElementById('insight-overlay').classList.replace('opacity-100','opacity-0'); document.getElementById('insight-overlay').classList.replace('pointer-events-auto','pointer-events-none'); }
+
+        function shootConfetti() {
+            const colors = ['#8c2626', '#1c2841', '#bda888'];
+            for(let i=0; i<60; i++) {
+                const c = document.createElement('div'); c.className='confetti';
+                c.style.left = Math.random()*100+'vw'; c.style.backgroundColor = colors[Math.floor(Math.random()*3)];
+                c.style.animation = `fall ${Math.random()*3+2}s linear forwards`;
+                document.body.appendChild(c); setTimeout(()=>c.remove(), 4000);
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
